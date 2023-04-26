@@ -41,6 +41,7 @@ public class AdminRestController {
         return ResponseEntity.ok(convertToBookingDTO(booking));
     }
 
+
     @ExceptionHandler({
             PlaceIsNotFoundException.class, PlaceIsNotFreeException.class,
             FieldIsEmptyException.class, TimeEndIsBeforeOrEqualsTimeStartException.class,

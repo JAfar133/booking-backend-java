@@ -1,15 +1,35 @@
 package ru.wolves.bookingsite.services.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.wolves.bookingsite.exceptions.PersonExceptions.NotValidPhoneNumberException;
+import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonAlreadyExistException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonNotFoundException;
 import ru.wolves.bookingsite.models.Person;
-import ru.wolves.bookingsite.repositories.BookingRepo;
+import ru.wolves.bookingsite.models.Token;
+import ru.wolves.bookingsite.models.dto.AuthenticationResponse;
+import ru.wolves.bookingsite.models.dto.PersonAuthenticationRequest;
+import ru.wolves.bookingsite.models.dto.RegisterRequest;
+import ru.wolves.bookingsite.models.enums.PersonRole;
+import ru.wolves.bookingsite.models.enums.TokenType;
 import ru.wolves.bookingsite.repositories.PersonRepo;
+import ru.wolves.bookingsite.repositories.TokenRepo;
+import ru.wolves.bookingsite.security.JwtService;
+import ru.wolves.bookingsite.security.PersonDetails;
+import ru.wolves.bookingsite.security.PersonDetailsService;
 import ru.wolves.bookingsite.services.PersonService;
+import ru.wolves.bookingsite.util.PersonValidator;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,12 +37,25 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class PersonServiceImpl implements PersonService {
     private final PersonRepo personRepo;
-    private final BookingRepo bookingRepo;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+    private final PersonValidator personValidator;
+    private final TokenRepo tokenRepo;
+    private final PersonDetailsService personDetailsService;
 
     @Autowired
-    public PersonServiceImpl(PersonRepo personRepo, BookingRepo bookingRepo) {
+    public PersonServiceImpl(PersonRepo personRepo, PasswordEncoder passwordEncoder,
+                             JwtService jwtService, AuthenticationManager authenticationManager,
+                             PersonValidator personValidator, TokenRepo tokenRepo,
+                             PersonDetailsService personDetailsService) {
         this.personRepo = personRepo;
-        this.bookingRepo = bookingRepo;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+        this.personValidator = personValidator;
+        this.tokenRepo = tokenRepo;
+        this.personDetailsService = personDetailsService;
     }
 
     public Person findPerson(Long id) throws PersonNotFoundException {
@@ -38,6 +71,14 @@ public class PersonServiceImpl implements PersonService {
         if(person.isPresent())
             return person.get();
         else throw new PersonNotFoundException("Person with phone = "+ phone +" wasn't found");
+    }
+
+    @Override
+    public Person findPersonByEmail(String email) throws PersonNotFoundException {
+        Optional<Person> person = personRepo.findByEmail(email);
+        if(person.isPresent())
+            return person.get();
+        else throw new PersonNotFoundException("Пользователь с почтой = "+ email +" не зарегистрирован");
 
     }
 
@@ -69,17 +110,119 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     @Transactional
-    public void savePerson(Person person) throws PersonNotFoundException {
-        Optional<Person> personOptional = personRepo.findByPhoneNumber(person.getPhoneNumber());
-        if(personOptional.isPresent()) {
-            updatePerson(personOptional.get().getId(), person);
-        }
-        else personRepo.save(person);
+    public AuthenticationResponse authPersonByPhone(String phoneNumber) throws PersonNotFoundException, NotValidPhoneNumberException {
+        personValidator.validatePhoneNumber(phoneNumber);
+        Person person = findPersonByPhone(phoneNumber);
+
+        var jwtToken = jwtService.generateToken(person);
+        var refreshToken = jwtService.generateRefreshToken(person);
+
+        AuthenticationResponse response = new AuthenticationResponse();
+        response.setAccessToken(jwtToken);
+        response.setRefreshToken(refreshToken);
+        return response;
     }
+
+    @Override
+    @Transactional
+    public AuthenticationResponse authPersonByEmail(PersonAuthenticationRequest request) throws PersonNotFoundException {
+
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(), request.getPassword()
+                )
+        );
+        Person person = findPersonByEmail(request.getEmail());
+        var jwtToken = jwtService.generateToken(person);
+        var refreshToken = jwtService.generateRefreshToken(person);
+
+        AuthenticationResponse response = new AuthenticationResponse();
+        response.setAccessToken(jwtToken);
+        response.setRefreshToken(refreshToken);
+        return response;
+    }
+    @Override
+    @Transactional
+    public AuthenticationResponse registerPerson(RegisterRequest registerRequest) throws NotValidPhoneNumberException, PersonAlreadyExistException {
+        personValidator.validatePhoneNumber(registerRequest.getPhoneNumber());
+        if(personRepo.findByPhoneNumber(registerRequest.getPhoneNumber()).isPresent())
+            throw new PersonAlreadyExistException("Пользователь с таким номером телефона уже зарегистрирован");
+        if(personRepo.findByEmail(registerRequest.getEmail()).isPresent())
+            throw new PersonAlreadyExistException("Пользователь с такой почтой уже зарегистрирован");
+
+        Person person = new Person();
+            person.setPhoneNumber(registerRequest.getPhoneNumber());
+            person.setEmail(registerRequest.getEmail());
+            person.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+            person.setRole(PersonRole.PERSON_USER);
+        Person savedPerson = personRepo.save(person);
+        
+        var jwtToken = jwtService.generateToken(person);
+
+        var refreshToken = jwtService.generateRefreshToken(person);
+
+        AuthenticationResponse response = new AuthenticationResponse();
+        response.setAccessToken(jwtToken);
+        response.setRefreshToken(refreshToken);
+        return response;
+    }
+
+    private void revokeAllPersonTokens(Person person){
+        var validTokens = tokenRepo.findAllValidTokensByPerson(person.getId());
+        if(validTokens.isEmpty()) return;
+        validTokens.forEach(t->{
+            t.setExpired(true);
+            t.setRevoked(true);
+        });
+        tokenRepo.saveAll(validTokens);
+    }
+
+    private void savePersonToken(Person savedPerson, String jwtToken) {
+        var token = new Token();
+            token.setPerson(savedPerson);
+            token.setToken(jwtToken);
+            token.setTokenType(TokenType.BEARER);
+            token.setExpired(false);
+            token.setRevoked(false);
+        tokenRepo.save(token);
+    }
+
 
     @Override
     @Transactional
     public void deletePerson(Long id) throws PersonNotFoundException {
         personRepo.delete(findPerson(id));
     }
+
+    @Override
+    @Transactional
+    public void refreshToken(HttpServletRequest request,
+                             HttpServletResponse response) throws IOException {
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        final String refreshToken;
+        final String personEmail;
+        if(authHeader == null || !authHeader.startsWith("Bearer ")){
+            return;
+        }
+        refreshToken = authHeader.substring(7);
+        personEmail = jwtService.extractUsername(refreshToken);
+
+        if(personEmail !=null){
+            PersonDetails personDetails = (PersonDetails) this.personDetailsService.loadUserByUsername(personEmail);
+            if(jwtService.isTokenValid(refreshToken, personDetails.getPerson())) {
+                var accessToken = jwtService.generateToken(personDetails.getPerson());
+//                LOGOUT CODE
+//                revokeAllPersonTokens(personDetails.getPerson());
+//                savePersonToken(personDetails.getPerson(),accessToken);
+                var authResponse = new AuthenticationResponse();
+                    authResponse.setAccessToken(accessToken);
+                    authResponse.setRefreshToken(refreshToken);
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+
+                objectMapper.writeValue(response.getOutputStream(), authResponse);
+            }
+        }
+    }
+
 }

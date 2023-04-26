@@ -34,7 +34,10 @@ public class PersonValidator {
         if(person.getPost().equals("Работник") && (person.getStructure()==null || person.getStructure().isEmpty())){
             throw new FieldIsEmptyException("Поле `Структура` не может быть пустым");
         }
-        if(!Pattern.matches("^(\\+7|7|8)?[\\s-]?\\(?[3489][0-9]{2}\\)?[\\s-]?[0-9]{3}[\\s-]?[0-9]{2}[\\s-]?[0-9]{2}$",person.getPhoneNumber())){
+        validatePhoneNumber(person.getPhoneNumber());
+    }
+    public void validatePhoneNumber(String phoneNumber) throws NotValidPhoneNumberException {
+        if(!Pattern.matches("^(\\+7|7|8| 7)?[\\s-]?\\(?[3489][0-9]{2}\\)?[\\s-]?[0-9]{3}[\\s-]?[0-9]{2}[\\s-]?[0-9]{2}$",phoneNumber)){
             throw new NotValidPhoneNumberException("Номер телефона введен не правильно");
         }
     }

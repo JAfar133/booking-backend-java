@@ -54,18 +54,37 @@ public class BookingServiceImpl implements BookingService {
 
     @Transactional
     public void savePersonWithBooking(Booking booking) throws PersonNotFoundException {
-        Person person = booking.getCustomer();
-        if(!personRepo.findByPhoneNumber(person.getPhoneNumber()).isPresent()){
-            throw new PersonNotFoundException("Пользователь с таким номером телефона не зарегистрирован");
+        Optional<Person> person = personRepo.findById(booking.getCustomer().getId());
+        if(person.isPresent())
+        {
+            Person clientPerson = booking.getCustomer();
+            Person savedPerson = person.get();
+            if(clientPerson.getLastName()!=null) savedPerson.setLastName(clientPerson.getLastName());
+            if(clientPerson.getFirstName()!=null) savedPerson.setFirstName(clientPerson.getFirstName());
+            if(clientPerson.getMiddleName()!=null) savedPerson.setMiddleName(clientPerson.getMiddleName());
+            if(clientPerson.getPhoneNumber()!=null) savedPerson.setPhoneNumber(clientPerson.getPhoneNumber());
+            if(clientPerson.getPost()!=null) {
+                savedPerson.setPost(clientPerson.getPost());
+                if (clientPerson.getPost().equals("Студент")) {
+                    savedPerson.setInstitute(clientPerson.getInstitute());
+                    savedPerson.setCourse(clientPerson.getCourse());
+                }
+                else {
+                    savedPerson.setStructure(clientPerson.getStructure());
+                }
+            }
+            booking.setBookedAt(new Date());
+            if(savedPerson.getBookingList()==null)
+                savedPerson.setBookingList(new ArrayList<>());
+            savedPerson.getBookingList().add(booking);
+            personRepo.save(savedPerson);
+            booking.setCustomer(savedPerson);
+            bookingRepo.save(booking);
         }
-        booking.setBookedAt(new Date());
-        if(person.getBookingList()==null)
-            person.setBookingList(new ArrayList<>());
-        person.getBookingList().add(booking);
-        personRepo.save(person);
-        booking.setCustomer(person);
-        bookingRepo.save(booking);
+
     }
+
+
 
     private String getLastNameInitials(Person person){
         var lastName = person.getLastName();

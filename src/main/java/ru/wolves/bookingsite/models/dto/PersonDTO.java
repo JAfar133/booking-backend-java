@@ -10,16 +10,19 @@ public class PersonDTO {
     private String lastName;
 
     private String middleName;
+    private String role;
 
     private String post;
 
     private String phoneNumber;
+    private String email;
 
     private String institute;
 
     private int course;
 
     private String structure;
+
 
     public PersonDTO() {
     }
@@ -95,5 +98,21 @@ public class PersonDTO {
 
     public void setStructure(String structure) {
         this.structure = structure;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

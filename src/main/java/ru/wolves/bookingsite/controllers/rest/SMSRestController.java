@@ -5,12 +5,18 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.wolves.bookingsite.exceptions.PersonExceptions.NotValidPhoneNumberException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonNotFoundException;
+import ru.wolves.bookingsite.exceptions.PersonExceptions.SmsCodeIsNotCorrectException;
 import ru.wolves.bookingsite.models.Person;
 import ru.wolves.bookingsite.models.SmsCode;
+import ru.wolves.bookingsite.models.dto.AuthenticationResponse;
 import ru.wolves.bookingsite.models.dto.PersonDTO;
 import ru.wolves.bookingsite.services.impl.PersonServiceImpl;
 import ru.wolves.bookingsite.services.impl.SmsServiceImpl;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/auth")
@@ -29,20 +35,18 @@ public class SMSRestController {
     }
 
     @PostMapping("/sendSms")
-    public ResponseEntity<?> sendSms(@RequestBody String phoneNumber) {
+    public ResponseEntity<?> sendSms(@RequestParam("phoneNumber") String phoneNumber) {
         SmsCode smsCode = smsService.sendSms(phoneNumber);
         return ResponseEntity.ok().body(smsCode);
     }
 
     @PostMapping("/verifyCode")
-    public ResponseEntity<?> verifyCode(@RequestBody PersonDTO person, @RequestParam String code) throws PersonNotFoundException {
-        boolean isValid = smsService.verifyCode(person.getPhoneNumber(), code);
+    public ResponseEntity<AuthenticationResponse> verifyCode(@RequestParam("phoneNumber") String phoneNumber, @RequestParam String code) throws PersonNotFoundException, NotValidPhoneNumberException, SmsCodeIsNotCorrectException {
+        boolean isValid = smsService.verifyCode(phoneNumber, code);
         if (isValid) {
-            personService.savePerson(convertToPerson(person));
-            Person p = personService.findPersonByPhone(person.getPhoneNumber());
-            return ResponseEntity.ok().body(convertToPersonDTO(p));
+            return ResponseEntity.ok(personService.authPersonByPhone(phoneNumber));
         } else {
-            return ResponseEntity.badRequest().body("code is incorrect");
+            throw new SmsCodeIsNotCorrectException("Неверный код");
         }
     }
 

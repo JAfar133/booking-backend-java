@@ -4,14 +4,18 @@ import jakarta.servlet.http.HttpSession;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ru.wolves.bookingsite.exceptions.FieldIsEmptyException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.NotValidPhoneNumberException;
+import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonAlreadyExistException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonNotFoundException;
 import ru.wolves.bookingsite.models.Booking;
 import ru.wolves.bookingsite.models.Person;
 import ru.wolves.bookingsite.models.dto.BookingDTO;
 import ru.wolves.bookingsite.models.dto.PersonDTO;
+import ru.wolves.bookingsite.security.PersonDetails;
 import ru.wolves.bookingsite.services.impl.PersonServiceImpl;
 import ru.wolves.bookingsite.util.PersonValidator;
 
@@ -58,14 +62,6 @@ public class PersonRestController {
         PersonDTO personDTO = convertToPersonDTO(person);
         return ResponseEntity.ok(convertToPersonDTO(person));
     }
-    @PostMapping
-    public ResponseEntity<?> savePerson(@RequestBody PersonDTO personDTO) throws NotValidPhoneNumberException, FieldIsEmptyException, PersonNotFoundException {
-        Person person = convertToPerson(personDTO);
-        personValidator.validate(person);
-
-        personService.savePerson(person);
-        return ResponseEntity.ok(convertToPersonDTO(person));
-    }
     @PatchMapping("/{id}")
     public ResponseEntity<?> updatePerson(@PathVariable Long id, @RequestBody PersonDTO personDTO) throws NotValidPhoneNumberException, FieldIsEmptyException, PersonNotFoundException {
         Person person = convertToPerson(personDTO);
@@ -80,6 +76,15 @@ public class PersonRestController {
 
         return ResponseEntity.ok("Person with id = "+id+"was deleted successfully");
     }
+
+    @GetMapping("/showInfo")
+    public ResponseEntity<PersonDTO> showPersonInfo(){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        PersonDetails personDetails = (PersonDetails) authentication.getPrincipal();
+
+        return ResponseEntity.ok(convertToPersonDTO(personDetails.getPerson()));
+    }
+
     @GetMapping("/session")
     public Map<String, Object> getSession(HttpSession session){
         Map<String, Object> result = new HashMap<>();
@@ -93,7 +98,7 @@ public class PersonRestController {
 
     @ExceptionHandler({
             PersonNotFoundException.class, FieldIsEmptyException.class,
-            NotValidPhoneNumberException.class
+            NotValidPhoneNumberException.class, PersonAlreadyExistException.class
     })
     private ResponseEntity<?> handler(Exception e){
         return ResponseEntity.badRequest().body(e.getMessage());

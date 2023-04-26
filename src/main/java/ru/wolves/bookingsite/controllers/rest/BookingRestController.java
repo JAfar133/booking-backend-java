@@ -6,10 +6,12 @@ import jakarta.servlet.http.HttpSession;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.wolves.bookingsite.exceptions.FieldIsEmptyException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.NotValidPhoneNumberException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonNotFoundException;
+import ru.wolves.bookingsite.exceptions.PersonExceptions.SmsCodeIsNotCorrectException;
 import ru.wolves.bookingsite.exceptions.PlaceIsNotFoundException;
 import ru.wolves.bookingsite.exceptions.bookingExceptions.BookingNotFoundException;
 import ru.wolves.bookingsite.exceptions.bookingExceptions.PlaceIsNotFreeException;
@@ -28,6 +30,7 @@ import java.util.List;
 
 
 @RestController
+@CrossOrigin
 @RequestMapping("/booking")
 public class BookingRestController {
 
@@ -61,9 +64,10 @@ public class BookingRestController {
         return ResponseEntity.ok("Booking is valid");
     }
 
+    @CrossOrigin(origins = "http://localhost:8081", allowCredentials = "true", methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS })
     @PostMapping("/save")
     public ResponseEntity<?> saveBookingWithPersonDetails(
-            @RequestBody BookingDTO bookingDTO, HttpSession session) throws FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException, NotValidPhoneNumberException, PersonNotFoundException {
+            @RequestBody BookingDTO bookingDTO) throws FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException, NotValidPhoneNumberException, PersonNotFoundException {
 
         Person person = convertToPerson(bookingDTO.getCustomer());
         Booking booking = convertToBooking(bookingDTO);
@@ -116,7 +120,7 @@ public class BookingRestController {
             PlaceIsNotFoundException.class, FieldIsEmptyException.class,
             NotValidPhoneNumberException.class, TimeEndIsBeforeOrEqualsTimeStartException.class,
             BookingNotFoundException.class, PlaceIsNotFreeException.class,
-            Exception.class
+            Exception.class, SmsCodeIsNotCorrectException.class
     })
     private ResponseEntity<?> handle(Exception e){
         return ResponseEntity.badRequest().body(e.getMessage());

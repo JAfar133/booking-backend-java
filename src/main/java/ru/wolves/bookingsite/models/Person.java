@@ -1,8 +1,9 @@
 package ru.wolves.bookingsite.models;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import ru.wolves.bookingsite.models.enums.PersonRole;
+import ru.wolves.bookingsite.security.socialOauth2.AuthProvider;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +31,12 @@ public class Person {
     @Column(name = "phone")
     @Pattern(regexp = "^(\\+7|7|8)?[\\s-]?\\(?[3489][0-9]{2}\\)?[\\s-]?[0-9]{3}[\\s-]?[0-9]{2}[\\s-]?[0-9]{2}$", message = "Номер введен неверно")
     private String phoneNumber;
+
+    @Column(name = "email")
+    private String email;
+    @Column(name = "password")
+    private String password;
+
     @Column(name = "institute")
     private String institute;
     @Column(name = "course")
@@ -42,6 +49,18 @@ public class Person {
 
     @OneToMany(mappedBy = "customer")
     private List<Booking> bookingList;
+
+    @Enumerated(EnumType.STRING)
+    private PersonRole role;
+
+    @Enumerated(EnumType.STRING)
+    private AuthProvider provider;
+
+    @Column(name = "provider_id")
+    private String providerId;
+
+    @OneToMany(mappedBy = "person")
+    private List<Token> tokens;
 
     public Person(String firstName, String lastName, String middleName, String post, String phoneNumber, String institute, int course) {
         this.firstName = firstName;
@@ -62,6 +81,30 @@ public class Person {
         this.structure = structure;
     }
 
+    public AuthProvider getProvider() {
+        return provider;
+    }
+
+    public void setProvider(AuthProvider provider) {
+        this.provider = provider;
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
+    }
+
+    public List<Token> getTokens() {
+        return tokens;
+    }
+
+    public void setTokens(List<Token> tokens) {
+        this.tokens = tokens;
+    }
+
     public List<Booking> getBookingList() {
         return bookingList;
     }
@@ -79,6 +122,22 @@ public class Person {
     }
 
     public Person() {
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public PersonRole getRole() {
+        return role;
+    }
+
+    public void setRole(PersonRole role) {
+        this.role = role;
     }
 
     public Long getId() {
@@ -151,6 +210,14 @@ public class Person {
 
     public void setStructure(String structure) {
         this.structure = structure;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     @Override

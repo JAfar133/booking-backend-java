@@ -4,14 +4,19 @@ package ru.wolves.bookingsite.controllers.rest;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import ru.wolves.bookingsite.exceptions.FieldIsEmptyException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.NotValidPhoneNumberException;
+import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonAlreadyExistException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonNotFoundException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.SmsCodeIsNotCorrectException;
 import ru.wolves.bookingsite.models.Person;
 import ru.wolves.bookingsite.models.SmsCode;
 import ru.wolves.bookingsite.models.dto.AuthenticationResponse;
 import ru.wolves.bookingsite.models.dto.PersonDTO;
+import ru.wolves.bookingsite.security.PersonDetails;
 import ru.wolves.bookingsite.services.impl.PersonServiceImpl;
 import ru.wolves.bookingsite.services.impl.SmsServiceImpl;
 
@@ -19,7 +24,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/sms")
 public class SMSRestController {
 
     public final static String SESSION_KEY_SMS_CODE = "SESSION_KEY_SMS_CODE";
@@ -40,8 +45,10 @@ public class SMSRestController {
         return ResponseEntity.ok().body(smsCode);
     }
 
-    @PostMapping("/verifyCode")
-    public ResponseEntity<AuthenticationResponse> verifyCode(@RequestParam("phoneNumber") String phoneNumber, @RequestParam String code) throws PersonNotFoundException, NotValidPhoneNumberException, SmsCodeIsNotCorrectException {
+    @PostMapping("/verifyCode-and-auth")
+    public ResponseEntity<?> verifyCodeAndAuth(@RequestParam("phoneNumber") String phoneNumber,
+                                                             @RequestParam String code) throws PersonNotFoundException, NotValidPhoneNumberException, SmsCodeIsNotCorrectException {
+
         boolean isValid = smsService.verifyCode(phoneNumber, code);
         if (isValid) {
             return ResponseEntity.ok(personService.authPersonByPhone(phoneNumber));
@@ -49,6 +56,29 @@ public class SMSRestController {
             throw new SmsCodeIsNotCorrectException("Неверный код");
         }
     }
+    @PostMapping("/verifyCode")
+    public ResponseEntity<?> verifyCode(@RequestParam("phoneNumber") String phoneNumber,@RequestParam String code) throws PersonNotFoundException, PersonAlreadyExistException, NotValidPhoneNumberException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        PersonDetails personDetails = (PersonDetails) authentication.getPrincipal();
+        Person person = personDetails.getPerson();
+        if(person.getId().equals(personService.findPerson(person.getId()).getId())){
+            boolean isValid = smsService.verifyCode(phoneNumber, code);
+            if(isValid){
+                person = personService.verifyPhoneNumber(person, phoneNumber);
+            }
+        }
+        else throw new PersonAlreadyExistException("Пользователь с таким номером телефона уже зарегистрирован");
+    return ResponseEntity.ok(convertToPersonDTO(person));
+    }
+
+    @ExceptionHandler({
+            PersonNotFoundException.class, SmsCodeIsNotCorrectException.class,
+            NotValidPhoneNumberException.class, PersonAlreadyExistException.class
+    })
+    private ResponseEntity<?> handler(Exception e){
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
 
     private Person convertToPerson(PersonDTO personDTO){
         return modelMapper.map(personDTO,Person.class);

@@ -4,9 +4,12 @@ package ru.wolves.bookingsite.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,18 +27,18 @@ import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
-public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+public class CustomOidcUserService extends OidcUserService implements OAuth2UserService<OidcUserRequest, OidcUser> {
 
     private final PersonRepo personRepo;
 
     @Autowired
-    public CustomOAuth2UserService(PersonRepo personRepo) {
+    public CustomOidcUserService(PersonRepo personRepo) {
         this.personRepo = personRepo;
     }
 
     @Transactional
     @Override
-    public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
+    public OidcUser loadUser(OidcUserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(oAuth2UserRequest);
 
         try {
@@ -48,7 +51,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
     }
 
-    private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) throws OAuth2AuthenticationProcessingException, PersonNotFoundException {
+    private OidcUser processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) throws OAuth2AuthenticationProcessingException, PersonNotFoundException {
         OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(
                 oAuth2UserRequest.getClientRegistration().getRegistrationId(), oAuth2User.getAttributes());
         if(StringUtils.isEmpty(oAuth2UserInfo.getEmail())) {
@@ -75,18 +78,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private Person registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) {
         Person person = new Person();
-            person.setProvider(AuthProvider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId()));
-            person.setProviderId(oAuth2UserInfo.getId());
-            person.setFirstName(oAuth2UserInfo.getFirstName());
-            person.setLastName(oAuth2UserInfo.getLastName());
-            person.setMiddleName(oAuth2UserInfo.getMiddleName());
-            if(oAuth2UserInfo.getPhoneNumber()!=null && !personRepo.findByPhoneNumber(oAuth2UserInfo.getPhoneNumber()).isPresent()){
-                person.setPhoneNumber(oAuth2UserInfo.getPhoneNumber());
-            }
-            if(oAuth2UserInfo.getEmail()!=null && !personRepo.findByEmail(oAuth2UserInfo.getEmail()).isPresent()){
-                person.setEmail(oAuth2UserInfo.getEmail());
-            }
-            person.setRole(PersonRole.PERSON_USER);
+        person.setProvider(AuthProvider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId()));
+        person.setProviderId(oAuth2UserInfo.getId());
+        person.setFirstName(oAuth2UserInfo.getFirstName());
+        person.setLastName(oAuth2UserInfo.getLastName());
+        person.setMiddleName(oAuth2UserInfo.getMiddleName());
+        person.setPhoneNumber(oAuth2UserInfo.getPhoneNumber());
+        person.setEmail(oAuth2UserInfo.getEmail());
+        person.setRole(PersonRole.PERSON_USER);
         return personRepo.save(person);
 
     }

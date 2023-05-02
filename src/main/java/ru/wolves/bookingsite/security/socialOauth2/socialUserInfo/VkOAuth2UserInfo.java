@@ -2,25 +2,29 @@ package ru.wolves.bookingsite.security.socialOauth2.socialUserInfo;
 
 import java.util.Map;
 
-public class GoogleOAuth2UserInfo extends OAuth2UserInfo{
-
-    public GoogleOAuth2UserInfo(Map<String, Object> attributes) {
+public class VkOAuth2UserInfo extends OAuth2UserInfo{
+    public VkOAuth2UserInfo(Map<String, Object> attributes) {
         super(attributes);
     }
 
     @Override
+    public Map<String, Object> getAttributes() {
+        return super.getAttributes();
+    }
+
+    @Override
     public String getId() {
-        return (String) attributes.get("sub");
+        return null;
     }
 
     @Override
     public String getFirstName() {
-        return (String) attributes.get("given_name");
+        return null;
     }
 
     @Override
     public String getLastName() {
-        return (String) attributes.get("family_name");
+        return null;
     }
 
     @Override
@@ -35,11 +39,11 @@ public class GoogleOAuth2UserInfo extends OAuth2UserInfo{
 
     @Override
     public String getEmail() {
-        return (String) attributes.get("email");
+        return null;
     }
 
     @Override
     public String getImageUrl() {
-        return (String) attributes.get("picture");
+        return null;
     }
 }

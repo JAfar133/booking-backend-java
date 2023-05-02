@@ -13,8 +13,23 @@ public class GithubOAuth2UserInfo extends OAuth2UserInfo{
     }
 
     @Override
-    public String getName() {
+    public String getFirstName() {
         return (String) attributes.get("name");
+    }
+
+    @Override
+    public String getLastName() {
+        return null;
+    }
+
+    @Override
+    public String getMiddleName() {
+        return null;
+    }
+
+    @Override
+    public String getPhoneNumber() {
+        return null;
     }
 
     @Override

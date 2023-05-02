@@ -1,28 +1,32 @@
 package ru.wolves.bookingsite.models.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Pattern;
 
 public class PersonDTO {
 
     private Long id;
     private String firstName;
-
     private String lastName;
-
     private String middleName;
     private String role;
-
     private String post;
-
     private String phoneNumber;
+    @JsonProperty("phoneNumber_confirmed")
+    private boolean phoneNumberConfirmed;
     private String email;
-
     private String institute;
-
     private int course;
-
     private String structure;
+    private String provider;
 
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
 
     public PersonDTO() {
     }
@@ -106,6 +110,14 @@ public class PersonDTO {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public boolean isPhoneNumberConfirmed() {
+        return phoneNumberConfirmed;
+    }
+
+    public void setPhoneNumberConfirmed(boolean phoneNumberConfirmed) {
+        this.phoneNumberConfirmed = phoneNumberConfirmed;
     }
 
     public String getEmail() {

@@ -70,7 +70,7 @@ public class PersonServiceImpl implements PersonService {
         Optional<Person> person = personRepo.findByPhoneNumber(phone);
         if(person.isPresent())
             return person.get();
-        else throw new PersonNotFoundException("Person with phone = "+ phone +" wasn't found");
+        else throw new PersonNotFoundException("Пользователь с номером "+ phone +" не зарегистрирован");
     }
 
     @Override
@@ -113,7 +113,8 @@ public class PersonServiceImpl implements PersonService {
     public AuthenticationResponse authPersonByPhone(String phoneNumber) throws PersonNotFoundException, NotValidPhoneNumberException {
         personValidator.validatePhoneNumber(phoneNumber);
         Person person = findPersonByPhone(phoneNumber);
-
+        person.setPhoneNumberConfirmed(true);
+        personRepo.save(person);
         var jwtToken = jwtService.generateToken(person);
         var refreshToken = jwtService.generateRefreshToken(person);
 
@@ -121,6 +122,15 @@ public class PersonServiceImpl implements PersonService {
         response.setAccessToken(jwtToken);
         response.setRefreshToken(refreshToken);
         return response;
+    }
+
+    @Transactional
+    public Person verifyPhoneNumber(Person person, String phoneNumber) throws NotValidPhoneNumberException {
+        personValidator.validatePhoneNumber(phoneNumber);
+        person.setPhoneNumber(phoneNumber);
+        person.setPhoneNumberConfirmed(true);
+        personRepo.save(person);
+        return person;
     }
 
     @Override

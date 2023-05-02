@@ -19,6 +19,7 @@ import java.util.Collections;
 public class BookingSiteApplication {
     public static void main(String[] args) {
         SpringApplication.run(BookingSiteApplication.class, args);
+
     }
     @Bean
     public ObjectMapper objectMapper(){

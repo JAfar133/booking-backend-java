@@ -62,11 +62,14 @@ public class PersonRestController {
         PersonDTO personDTO = convertToPersonDTO(person);
         return ResponseEntity.ok(convertToPersonDTO(person));
     }
-    @PatchMapping("/{id}")
-    public ResponseEntity<?> updatePerson(@PathVariable Long id, @RequestBody PersonDTO personDTO) throws NotValidPhoneNumberException, FieldIsEmptyException, PersonNotFoundException {
+    @PatchMapping
+    public ResponseEntity<?> updatePerson(@RequestBody PersonDTO personDTO) throws NotValidPhoneNumberException, FieldIsEmptyException, PersonNotFoundException {
         Person person = convertToPerson(personDTO);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        PersonDetails personDetails = (PersonDetails) authentication.getPrincipal();
+        Person person1 = personDetails.getPerson();
 
-        personService.updatePerson(id,person);
+        personService.updatePerson(person1.getId(),person);
 
         return ResponseEntity.ok(convertToPersonDTO(person));
     }

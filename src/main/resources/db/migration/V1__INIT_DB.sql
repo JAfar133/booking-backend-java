@@ -9,6 +9,7 @@ create table person
     middle_name varchar(255),
     last_name_and_initials varchar(255),
     phone varchar(255) unique,
+    phone_confirmed boolean,
     email varchar(255) unique,
     password varchar(255) unique,
     role varchar(255),

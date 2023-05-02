@@ -32,6 +32,9 @@ public class Person {
     @Pattern(regexp = "^(\\+7|7|8)?[\\s-]?\\(?[3489][0-9]{2}\\)?[\\s-]?[0-9]{3}[\\s-]?[0-9]{2}[\\s-]?[0-9]{2}$", message = "Номер введен неверно")
     private String phoneNumber;
 
+    @Column(name = "phone_confirmed")
+    private boolean phoneNumberConfirmed;
+
     @Column(name = "email")
     private String email;
     @Column(name = "password")
@@ -119,6 +122,14 @@ public class Person {
 
     public void setLastNameAndInitials(String lastNameAndInitials) {
         this.lastNameAndInitials = lastNameAndInitials;
+    }
+
+    public boolean isPhoneNumberConfirmed() {
+        return phoneNumberConfirmed;
+    }
+
+    public void setPhoneNumberConfirmed(boolean phoneNumberConfirmed) {
+        this.phoneNumberConfirmed = phoneNumberConfirmed;
     }
 
     public Person() {

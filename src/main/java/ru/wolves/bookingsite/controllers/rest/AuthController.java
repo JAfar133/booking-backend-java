@@ -4,8 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import ru.wolves.bookingsite.exceptions.FieldIsEmptyException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.NotValidPhoneNumberException;
@@ -17,7 +15,6 @@ import ru.wolves.bookingsite.models.dto.RegisterRequest;
 import ru.wolves.bookingsite.services.impl.PersonServiceImpl;
 
 import java.io.IOException;
-import java.security.Principal;
 
 @RestController
 @CrossOrigin
@@ -32,15 +29,16 @@ public class AuthController {
         this.personService = personService;
 
     }
-    @GetMapping("/session")
-    public Principal principal(Principal principal){
-        return principal;
+    @GetMapping("/auth/login/yandex")
+    public void red(HttpServletResponse response) throws IOException {
+        response.sendRedirect("http://localhost:8080/oauth2/authorize/yandex");
     }
-    @GetMapping("/")
-    public void redirect(HttpServletResponse response, HttpServletRequest request) throws IOException {
+    @GetMapping("/redirect")
+    public void redirect(@RequestParam("access_token") String accessToken,
+                         @RequestParam("refresh_token") String refreshToken, HttpServletResponse response) throws IOException {
 
-        response.sendRedirect("http://localhost:8081");
-
+        response.sendRedirect("http://localhost:8081?access_token=" + accessToken + "&refresh_token=" + refreshToken);
+        System.out.println(response);
     }
     @PostMapping("/auth/login/email")
     public ResponseEntity<AuthenticationResponse> emailLogin(

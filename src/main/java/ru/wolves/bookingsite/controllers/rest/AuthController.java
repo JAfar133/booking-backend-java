@@ -38,7 +38,6 @@ public class AuthController {
                          @RequestParam("refresh_token") String refreshToken, HttpServletResponse response) throws IOException {
 
         response.sendRedirect("http://localhost:8081?access_token=" + accessToken + "&refresh_token=" + refreshToken);
-        System.out.println(response);
     }
     @PostMapping("/auth/login/email")
     public ResponseEntity<AuthenticationResponse> emailLogin(

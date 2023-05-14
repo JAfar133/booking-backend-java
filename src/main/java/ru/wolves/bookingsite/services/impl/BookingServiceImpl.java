@@ -3,6 +3,7 @@ package ru.wolves.bookingsite.services.impl;
 
 
 import org.apache.log4j.Logger;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,6 +14,7 @@ import ru.wolves.bookingsite.exceptions.bookingExceptions.BookingNotFoundExcepti
 import ru.wolves.bookingsite.models.Booking;
 import ru.wolves.bookingsite.models.Person;
 import ru.wolves.bookingsite.models.RoomHall;
+import ru.wolves.bookingsite.models.dto.BookingDTO;
 import ru.wolves.bookingsite.repositories.BookingRepo;
 import ru.wolves.bookingsite.repositories.PersonRepo;
 import ru.wolves.bookingsite.services.BookingService;
@@ -29,12 +31,15 @@ import java.util.Optional;
 public class BookingServiceImpl implements BookingService {
     private final BookingRepo bookingRepo;
     private final PersonRepo personRepo;
+    private final ModelMapper modelMapper;
+
     private static org.apache.log4j.Logger log = Logger.getLogger(BookingServiceImpl.class);
 
     @Autowired
-    public BookingServiceImpl(BookingRepo bookingRepo, PersonRepo personRepo) {
+    public BookingServiceImpl(BookingRepo bookingRepo, PersonRepo personRepo, ModelMapper modelMapper) {
         this.bookingRepo = bookingRepo;
         this.personRepo = personRepo;
+        this.modelMapper = modelMapper;
     }
 
     public List<Booking> findAllByRoomHall(RoomHall roomHall){
@@ -77,6 +82,7 @@ public class BookingServiceImpl implements BookingService {
             if(savedPerson.getBookingList()==null)
                 savedPerson.setBookingList(new ArrayList<>());
             savedPerson.getBookingList().add(booking);
+            savedPerson.setLastNameAndInitials(getLastNameInitials(savedPerson));
             personRepo.save(savedPerson);
             booking.setCustomer(savedPerson);
             bookingRepo.save(booking);
@@ -84,7 +90,12 @@ public class BookingServiceImpl implements BookingService {
 
     }
 
-
+    @Transactional
+    public void deleteBookings(List<BookingDTO> bookingDTOS){
+        List<Booking> bookings = new ArrayList<>();
+        bookingDTOS.forEach(b->bookings.add(convertToBooking(b)));
+        bookingRepo.deleteAll(bookings);
+    }
 
     private String getLastNameInitials(Person person){
         var lastName = person.getLastName();
@@ -168,4 +179,11 @@ public class BookingServiceImpl implements BookingService {
     public List<Booking> findAllBookingWithPlaceAndDate(RoomHall roomHall, LocalDate date) {
         return bookingRepo.findAllByPlaceAndDate(Sort.by("timeStart"), roomHall, date);
     }
+    private Booking convertToBooking(BookingDTO bookingDTO){
+        return modelMapper.map(bookingDTO,Booking.class);
+    }
+    private BookingDTO convertToBookingDTO(Booking booking){
+        return modelMapper.map(booking,BookingDTO.class);
+    }
+
 }

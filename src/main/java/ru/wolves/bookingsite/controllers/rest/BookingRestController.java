@@ -116,6 +116,12 @@ public class BookingRestController {
         return ResponseEntity.ok("Booking was deleted successfully");
     }
 
+    @PostMapping("/delete-all")
+    public ResponseEntity<?> deleteBookings(@RequestBody List<BookingDTO> bookingDTOS){
+        bookingService.deleteBookings(bookingDTOS);
+        return ResponseEntity.ok("bookings was deleted");
+    }
+
     @ExceptionHandler({
             PlaceIsNotFoundException.class, FieldIsEmptyException.class,
             NotValidPhoneNumberException.class, TimeEndIsBeforeOrEqualsTimeStartException.class,

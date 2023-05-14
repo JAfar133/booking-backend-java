@@ -13,6 +13,8 @@ public class OAuth2UserInfoFactory {
             return new YandexOAuth2UserInfo(attributes);
         } else if (registrationId.equalsIgnoreCase(AuthProvider.github.toString())) {
             return new GithubOAuth2UserInfo(attributes);
+        }else if (registrationId.equalsIgnoreCase(AuthProvider.vk.toString())) {
+            return new VkOAuth2UserInfo(attributes);
         } else {
             throw new OAuth2AuthenticationProcessingException("Sorry! Login with " + registrationId + " is not supported yet.");
         }

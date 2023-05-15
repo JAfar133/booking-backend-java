@@ -30,7 +30,7 @@ import java.util.List;
 
 
 @RestController
-@CrossOrigin
+@CrossOrigin(origins = "http://195.133.49.102:8081")
 @RequestMapping("/booking")
 public class BookingRestController {
 

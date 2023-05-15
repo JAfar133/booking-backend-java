@@ -9,6 +9,7 @@ import ru.wolves.bookingsite.services.impl.RoomHallServiceImpl;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "http://195.133.49.102:8081")
 @RequestMapping("/roomHall")
 public class RoomHallRestController {
 

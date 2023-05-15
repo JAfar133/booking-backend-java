@@ -66,6 +66,7 @@ public class SMSRestController {
             if(isValid){
                 person = personService.verifyPhoneNumber(person, phoneNumber);
             }
+            else return ResponseEntity.badRequest().body("Неверный код");
         }
         else throw new PersonAlreadyExistException("Пользователь с таким номером телефона уже зарегистрирован");
     return ResponseEntity.ok(convertToPersonDTO(person));

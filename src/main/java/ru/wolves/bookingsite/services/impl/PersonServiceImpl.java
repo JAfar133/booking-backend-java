@@ -136,7 +136,6 @@ public class PersonServiceImpl implements PersonService {
     @Override
     @Transactional
     public AuthenticationResponse authPersonByEmail(PersonAuthenticationRequest request) throws PersonNotFoundException {
-
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(), request.getPassword()

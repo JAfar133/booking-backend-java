@@ -49,7 +49,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
 
-        String targetUrl = "/redirect";
+        String targetUrl = "/auth/redirect";
 
 
         PersonDetails person = (PersonDetails) authentication.getPrincipal();

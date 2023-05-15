@@ -103,5 +103,4 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         return personRepo.save(existingPerson);
     }
-
 }

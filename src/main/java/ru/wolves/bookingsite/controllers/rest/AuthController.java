@@ -18,7 +18,7 @@ import java.io.IOException;
 
 @RestController
 @CrossOrigin
-//@RequestMapping("/auth")
+@RequestMapping("/auth")
 public class AuthController {
 
     private String referer;
@@ -29,30 +29,26 @@ public class AuthController {
         this.personService = personService;
 
     }
-    @GetMapping("/auth/login/yandex")
-    public void red(HttpServletResponse response) throws IOException {
-        response.sendRedirect("http://localhost:8080/oauth2/authorize/yandex");
-    }
     @GetMapping("/redirect")
     public void redirect(@RequestParam("access_token") String accessToken,
                          @RequestParam("refresh_token") String refreshToken, HttpServletResponse response) throws IOException {
 
-        response.sendRedirect("http://localhost:8081?access_token=" + accessToken + "&refresh_token=" + refreshToken);
+        response.sendRedirect("http://localhost:8081/oauth?access_token=" + accessToken + "&refresh_token=" + refreshToken);
     }
-    @PostMapping("/auth/login/email")
+    @PostMapping("/login/email")
     public ResponseEntity<AuthenticationResponse> emailLogin(
             @RequestBody PersonAuthenticationRequest request) throws PersonNotFoundException {
 
         return ResponseEntity.ok(personService.authPersonByEmail(request));
     }
-    @PostMapping("/auth/signin")
+    @PostMapping("/signin")
     public ResponseEntity<AuthenticationResponse> register(
             @RequestBody RegisterRequest request) throws NotValidPhoneNumberException, PersonAlreadyExistException {
 
         return ResponseEntity.ok(personService.registerPerson(request));
 
     }
-    @PostMapping("/auth/refresh-token")
+    @PostMapping("/refresh-token")
     public void refreshToken(
             HttpServletRequest request, HttpServletResponse response) throws PersonNotFoundException, IOException {
         personService.refreshToken(request,response);

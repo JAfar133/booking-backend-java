@@ -64,7 +64,6 @@ public class BookingRestController {
         return ResponseEntity.ok("Booking is valid");
     }
 
-    @CrossOrigin(origins = "http://localhost:8081", allowCredentials = "true", methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.OPTIONS })
     @PostMapping("/save")
     public ResponseEntity<?> saveBookingWithPersonDetails(
             @RequestBody BookingDTO bookingDTO) throws FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException, NotValidPhoneNumberException, PersonNotFoundException {

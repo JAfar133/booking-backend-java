@@ -37,7 +37,7 @@ public class BookingSiteApplication {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
         // *** URL below needs to match the Vue client URL and port ***
-        config.setAllowedOrigins(Arrays.asList("http://localhost:8081", "http://195.133.49.102:8081","https://localhost:8081", "https://195.133.49.102:8081"));
+        config.setAllowedOrigins(Arrays.asList("http://195.133.49.102:8081","http://localhost:8081"));
         config.setAllowedMethods(Collections.singletonList("*"));
         config.setAllowedHeaders(Collections.singletonList("*"));
         source.registerCorsConfiguration("/**", config);

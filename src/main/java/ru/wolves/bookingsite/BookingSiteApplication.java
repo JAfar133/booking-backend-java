@@ -38,7 +38,7 @@ public class BookingSiteApplication {
         config.setAllowCredentials(true);
         // *** URL below needs to match the Vue client URL and port ***
         config.setAllowedOrigins(Arrays.asList("http://195.133.49.102:8081","http://localhost:8081"));
-        config.setAllowedMethods(Collections.singletonList("*"));
+        config.setAllowedMethods(Arrays.asList("PATCH","GET","POST","DELETE","PUT"));
         config.setAllowedHeaders(Collections.singletonList("*"));
         source.registerCorsConfiguration("/**", config);
         FilterRegistrationBean bean = new FilterRegistrationBean<>(new CorsFilter(source));

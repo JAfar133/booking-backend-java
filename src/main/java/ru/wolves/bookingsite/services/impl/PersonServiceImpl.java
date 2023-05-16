@@ -233,5 +233,14 @@ public class PersonServiceImpl implements PersonService {
             }
         }
     }
-
+    @Transactional
+    public Person updatePersonEmail(Long id, Person person) throws PersonNotFoundException, PersonAlreadyExistException {
+        Person person1 = findPerson(id);
+        if(personRepo.findByEmail(person.getEmail()).isPresent()){
+            throw new PersonAlreadyExistException("Пользователь с таким email уже существует");
+        }
+        person1.setEmail(person.getEmail());
+        personRepo.save(person1);
+        return person1;
+    }
 }

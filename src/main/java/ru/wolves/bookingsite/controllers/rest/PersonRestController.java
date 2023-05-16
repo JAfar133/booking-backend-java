@@ -62,7 +62,7 @@ public class PersonRestController {
         PersonDTO personDTO = convertToPersonDTO(person);
         return ResponseEntity.ok(convertToPersonDTO(person));
     }
-    @PatchMapping
+    @PostMapping
     public ResponseEntity<?> updatePerson(@RequestBody PersonDTO personDTO) throws NotValidPhoneNumberException, FieldIsEmptyException, PersonNotFoundException {
         Person person = convertToPerson(personDTO);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -72,6 +72,14 @@ public class PersonRestController {
         personService.updatePerson(person1.getId(),person);
 
         return ResponseEntity.ok(convertToPersonDTO(person));
+    }
+    @PostMapping("/update-email")
+    public ResponseEntity<?> updateEmail(@RequestBody PersonDTO personDTO) throws PersonNotFoundException, PersonAlreadyExistException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        PersonDetails personDetails = (PersonDetails) authentication.getPrincipal();
+        Person person1 = personDetails.getPerson();
+        person1 = personService.updatePersonEmail(person1.getId(),convertToPerson(personDTO));
+        return ResponseEntity.ok(convertToPersonDTO(person1));
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePerson(@PathVariable Long id) throws PersonNotFoundException {

@@ -42,7 +42,7 @@ public class PersonRestController {
     public ResponseEntity<?> getAll(){
         List<Person> persons = personService.findAll();
         List<PersonDTO> personDTOS = getPersonDTOs(persons);
-        return ResponseEntity.ok(persons);
+        return ResponseEntity.ok(personDTOS);
     }
     @GetMapping("/get-bookings/{id}")
     public ResponseEntity<?> getAllBookingsByPersonId(@PathVariable Long id) throws PersonNotFoundException {

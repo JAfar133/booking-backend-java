@@ -3,6 +3,7 @@ package ru.wolves.bookingsite.controllers.rest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.wolves.bookingsite.exceptions.FieldIsEmptyException;
@@ -21,7 +22,8 @@ import java.io.IOException;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private String referer;
+    @Value("${BASE_URL}")
+    private String BASE_URL;
     private final PersonServiceImpl personService;
 
     @Autowired
@@ -32,8 +34,14 @@ public class AuthController {
     @GetMapping("/redirect")
     public void redirect(@RequestParam("access_token") String accessToken,
                          @RequestParam("refresh_token") String refreshToken, HttpServletResponse response) throws IOException {
+        StringBuilder stringBuilder = new StringBuilder(BASE_URL);
+        stringBuilder
+                .append("/oauth?access_token=")
+                .append(accessToken)
+                .append("&refresh_token=")
+                .append(refreshToken);
 
-        response.sendRedirect("http://localhost:8081/oauth?access_token=" + accessToken + "&refresh_token=" + refreshToken);
+        response.sendRedirect(stringBuilder.toString());
     }
     @PostMapping("/login/email")
     public ResponseEntity<AuthenticationResponse> emailLogin(

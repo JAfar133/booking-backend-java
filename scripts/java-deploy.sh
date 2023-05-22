@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 echo "Starting deployment..."
 
-cd Booking
-git pull origin master
+cd booking-backend-java
+git pull
 
 chmod +x mvnw
 ./mvnw clean package

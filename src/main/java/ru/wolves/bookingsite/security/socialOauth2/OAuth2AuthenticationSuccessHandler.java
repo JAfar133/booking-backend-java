@@ -53,8 +53,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
 
         PersonDetails person = (PersonDetails) authentication.getPrincipal();
-        var jwtToken = jwtService.generateToken(person.getPerson());
-        var refreshToken = jwtService.generateRefreshToken(person.getPerson());
+        var jwtToken = jwtService.generateToken(person);
+        var refreshToken = jwtService.generateRefreshToken(person);
 
         return UriComponentsBuilder.fromUriString(targetUrl)
                 .queryParam("access_token", jwtToken)

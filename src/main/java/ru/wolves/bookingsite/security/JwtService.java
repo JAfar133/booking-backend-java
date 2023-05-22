@@ -36,31 +36,32 @@ public class JwtService {
         return claimResolver.apply(claims);
     }
 
-    public String generateToken(Person person){
+    public String generateToken(PersonDetails person){
         return generateToken(new HashMap<>(), person);
     }
 
     public String generateToken(Map<String, Object> extraClaims,
-                                Person person){
+                                PersonDetails person){
         return buildToken(extraClaims,person,jwtExpiration);
     }
-    public String generateRefreshToken(Person person){
+    public String generateRefreshToken(PersonDetails person){
         return buildToken(new HashMap<>(), person, refreshExpiration);
     }
     private String buildToken(Map<String, Object> extraClaims,
-                              Person person, long expiration){
+                              PersonDetails person, long expiration){
         return Jwts.builder()
                 .setClaims(extraClaims)
-                .setSubject(person.getEmail())
+                .claim("roles",person.getPerson().getRole().toString())
+                .setSubject(person.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    public boolean isTokenValid(String token, Person person){
+    public boolean isTokenValid(String token, PersonDetails person){
         final String username = extractUsername(token);
-        return (username.equals(person.getEmail())) && !isTokenExpired(token);
+        return (username.equals(person.getPerson().getEmail())) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {

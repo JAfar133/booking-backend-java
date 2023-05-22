@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -30,6 +31,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.web.client.RestTemplate;
+import ru.wolves.bookingsite.models.enums.PersonRole;
 import ru.wolves.bookingsite.security.CustomOAuth2UserService;
 import ru.wolves.bookingsite.security.HttpCookieOAuth2AuthorizationRequestRepository;
 import ru.wolves.bookingsite.security.JwtAuthenticationFilter;
@@ -78,20 +80,18 @@ public class SecurityConfig {
                 .httpBasic()
                     .disable()
                 .authorizeHttpRequests()
+                    .requestMatchers("/admin/**").hasAuthority(PersonRole.ADMIN.toString())
                     .requestMatchers("/booking/save", "/sms/verifyCode","/booking/delete-all")
                         .authenticated()
                     .anyRequest().permitAll()
                     .and()
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login()
                     .tokenEndpoint().accessTokenResponseClient(accessTokenResponseClient())
                     .and()
                     .authorizationEndpoint()
                         .baseUri("/oauth2/authorize")
-//                        .authorizationRequestRepository(cookieAuthorizationRequestRepository())
                         .and()
-//                    .redirectionEndpoint()
-//                        .baseUri("/oauth2/callback")
-//                        .and()
                     .userInfoEndpoint()
                         .and()
                     .successHandler(oAuth2AuthenticationSuccessHandler)
@@ -100,7 +100,6 @@ public class SecurityConfig {
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and()
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout()
                 .logoutUrl("/auth/logout")
                 .addLogoutHandler(logoutHandler)

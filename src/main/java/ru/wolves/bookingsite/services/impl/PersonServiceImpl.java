@@ -115,8 +115,9 @@ public class PersonServiceImpl implements PersonService {
         Person person = findPersonByPhone(phoneNumber);
         person.setPhoneNumberConfirmed(true);
         personRepo.save(person);
-        var jwtToken = jwtService.generateToken(person);
-        var refreshToken = jwtService.generateRefreshToken(person);
+        PersonDetails personDetails = new PersonDetails(person);
+        var jwtToken = jwtService.generateToken(personDetails);
+        var refreshToken = jwtService.generateRefreshToken(personDetails);
 
         AuthenticationResponse response = new AuthenticationResponse();
         response.setAccessToken(jwtToken);
@@ -142,8 +143,9 @@ public class PersonServiceImpl implements PersonService {
                 )
         );
         Person person = findPersonByEmail(request.getEmail());
-        var jwtToken = jwtService.generateToken(person);
-        var refreshToken = jwtService.generateRefreshToken(person);
+        PersonDetails personDetails = new PersonDetails(person);
+        var jwtToken = jwtService.generateToken(personDetails);
+        var refreshToken = jwtService.generateRefreshToken(personDetails);
 
         AuthenticationResponse response = new AuthenticationResponse();
         response.setAccessToken(jwtToken);
@@ -163,12 +165,12 @@ public class PersonServiceImpl implements PersonService {
             person.setPhoneNumber(registerRequest.getPhoneNumber());
             person.setEmail(registerRequest.getEmail());
             person.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-            person.setRole(PersonRole.PERSON_USER);
+            person.setRole(PersonRole.USER);
         Person savedPerson = personRepo.save(person);
-        
-        var jwtToken = jwtService.generateToken(person);
+        PersonDetails personDetails = new PersonDetails(person);
+        var jwtToken = jwtService.generateToken(personDetails);
 
-        var refreshToken = jwtService.generateRefreshToken(person);
+        var refreshToken = jwtService.generateRefreshToken(personDetails);
 
         AuthenticationResponse response = new AuthenticationResponse();
         response.setAccessToken(jwtToken);
@@ -218,8 +220,8 @@ public class PersonServiceImpl implements PersonService {
 
         if(personEmail !=null){
             PersonDetails personDetails = (PersonDetails) this.personDetailsService.loadUserByUsername(personEmail);
-            if(jwtService.isTokenValid(refreshToken, personDetails.getPerson())) {
-                var accessToken = jwtService.generateToken(personDetails.getPerson());
+            if(jwtService.isTokenValid(refreshToken, personDetails)) {
+                var accessToken = jwtService.generateToken(personDetails);
 //                LOGOUT CODE
 //                revokeAllPersonTokens(personDetails.getPerson());
 //                savePersonToken(personDetails.getPerson(),accessToken);

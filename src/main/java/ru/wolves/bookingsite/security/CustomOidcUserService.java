@@ -85,7 +85,7 @@ public class CustomOidcUserService extends OidcUserService implements OAuth2User
         person.setMiddleName(oAuth2UserInfo.getMiddleName());
         person.setPhoneNumber(oAuth2UserInfo.getPhoneNumber());
         person.setEmail(oAuth2UserInfo.getEmail());
-        person.setRole(PersonRole.PERSON_USER);
+        person.setRole(PersonRole.USER);
         return personRepo.save(person);
 
     }

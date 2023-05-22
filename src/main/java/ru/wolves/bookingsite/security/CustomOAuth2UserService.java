@@ -86,7 +86,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             if(oAuth2UserInfo.getEmail()!=null && !personRepo.findByEmail(oAuth2UserInfo.getEmail()).isPresent()){
                 person.setEmail(oAuth2UserInfo.getEmail());
             }
-            person.setRole(PersonRole.PERSON_USER);
+            person.setRole(PersonRole.USER);
         return personRepo.save(person);
 
     }

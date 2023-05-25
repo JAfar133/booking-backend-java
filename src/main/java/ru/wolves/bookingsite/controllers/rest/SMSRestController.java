@@ -40,7 +40,9 @@ public class SMSRestController {
     }
 
     @PostMapping("/sendSms")
-    public ResponseEntity<?> sendSms(@RequestParam("phoneNumber") String phoneNumber) {
+    public ResponseEntity<?> sendSms(@RequestParam("phoneNumber") String phoneNumber,
+                                     @RequestParam(required = false, defaultValue = "false") Boolean changePhoneNumber) throws PersonNotFoundException {
+        if(!changePhoneNumber) personService.findPersonByPhone(phoneNumber);
         SmsCode smsCode = smsService.sendSms(phoneNumber);
         return ResponseEntity.ok().body(smsCode);
     }

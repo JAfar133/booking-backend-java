@@ -70,7 +70,6 @@ public class PersonRestController {
         Person person1 = personDetails.getPerson();
 
         personService.updatePerson(person1.getId(),person);
-
         return ResponseEntity.ok(convertToPersonDTO(person));
     }
     @PostMapping("/update-email")

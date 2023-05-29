@@ -53,7 +53,7 @@ public class BookingRestController {
     }
 
     @PostMapping("/valid-booking")
-    public ResponseEntity<?> validBookingAndAddToSession(
+    public ResponseEntity<?> validBooking(
             @RequestBody BookingDTO bookingDTO) throws FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException {
         Booking booking = convertToBooking(bookingDTO);
 

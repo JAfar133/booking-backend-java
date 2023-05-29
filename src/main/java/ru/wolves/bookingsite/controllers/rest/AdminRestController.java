@@ -16,6 +16,7 @@ import ru.wolves.bookingsite.models.dto.BookingDTO;
 import ru.wolves.bookingsite.models.dto.PersonDTO;
 import ru.wolves.bookingsite.services.impl.BookingServiceImpl;
 import ru.wolves.bookingsite.services.impl.PersonServiceImpl;
+import ru.wolves.bookingsite.util.BookingValidator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,12 +28,14 @@ public class AdminRestController {
     private final BookingServiceImpl bookingService;
     private final PersonServiceImpl personService;
     private final ModelMapper modelMapper;
+    private final BookingValidator bookingValidator;
 
     @Autowired
-    public AdminRestController(BookingServiceImpl bookingService, PersonServiceImpl personService, ModelMapper modelMapper) {
+    public AdminRestController(BookingServiceImpl bookingService, PersonServiceImpl personService, ModelMapper modelMapper, BookingValidator bookingValidator) {
         this.bookingService = bookingService;
         this.personService = personService;
         this.modelMapper = modelMapper;
+        this.bookingValidator = bookingValidator;
     }
     @PostMapping("/booking-confirm/{id}")
     public ResponseEntity<?> confirm(@PathVariable("id") Long id) throws BookingNotFoundException {
@@ -48,9 +51,10 @@ public class AdminRestController {
         bookingService.updateBooking(id, booking);
         return ResponseEntity.ok(convertToBookingDTO(booking));
     }
-    @PostMapping("/{id}")
-    public ResponseEntity<?> updateBooking(@PathVariable Long id, @RequestBody BookingDTO bookingDTO) throws BookingNotFoundException, FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException {
+    @PostMapping("/booking-update/{id}")
+    public ResponseEntity<?> updateBooking(@PathVariable("id") Long id, @RequestBody BookingDTO bookingDTO) throws BookingNotFoundException, FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException {
         Booking booking = convertToBooking(bookingDTO);
+        bookingValidator.validate(booking);
         bookingService.updateBooking(id, booking);
 
         return ResponseEntity.ok(convertToBookingDTO(booking));

@@ -39,7 +39,7 @@ public class BookingValidator {
 
     private void placeIsNotFree(Booking booking){
         bookingServiceImpl.findAllByRoomHall(booking.getPlace()).forEach(booking1 -> {
-            if (booking1.getDate().equals(booking.getDate()) && (booking.getId() == null || !booking1.getId().equals(booking.getId()))) {
+            if (!booking1.isRejected() && booking1.getDate().equals(booking.getDate()) && (booking.getId() == null || !booking1.getId().equals(booking.getId()))) {
                 if(booking1.getTimeStart().before(booking.getTimeStart())) {
                     if (booking1.getTimeEnd().after(booking.getTimeStart())) {
                         throw new PlaceIsNotFreeException("Помещение занято в это время");

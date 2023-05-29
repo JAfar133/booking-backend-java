@@ -41,12 +41,14 @@ public class AdminRestController {
     public ResponseEntity<?> confirm(@PathVariable("id") Long id) throws BookingNotFoundException {
         Booking booking = bookingService.findBooking(id);
         booking.setConfirmed(true);
+        booking.setRejected(false);
         bookingService.updateBooking(id, booking);
         return ResponseEntity.ok(convertToBookingDTO(booking));
     }
     @PostMapping("/booking-reject/{id}")
     public ResponseEntity<?> reject(@PathVariable("id") Long id) throws BookingNotFoundException {
         Booking booking = bookingService.findBooking(id);
+        booking.setRejected(true);
         booking.setConfirmed(false);
         bookingService.updateBooking(id, booking);
         return ResponseEntity.ok(convertToBookingDTO(booking));

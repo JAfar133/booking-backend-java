@@ -1,0 +1,1 @@
+ALTER TABLE booking ADD COLUMN rejected boolean;

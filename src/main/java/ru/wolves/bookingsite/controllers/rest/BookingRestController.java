@@ -91,6 +91,15 @@ public class BookingRestController {
         }
         return ResponseEntity.ok(bookingsDTO);
     }
+    @GetMapping("/get-all-not-rejected")
+    public ResponseEntity<?> getAllNotRejectedBookings(){
+        List<Booking> allBookings = bookingService.findAllUnRejectedBooking();
+        List<BookingDTO> bookingsDTO = new ArrayList<>();
+        for(Booking b: allBookings) {
+            bookingsDTO.add(convertToBookingDTO(b));
+        }
+        return ResponseEntity.ok(bookingsDTO);
+    }
     @GetMapping("/get-all-unconfirmed")
     public ResponseEntity<?> getAllUnconfirmedBookings(){
         List<Booking> allBooking = bookingService.findAllUnConfirmedBooking();

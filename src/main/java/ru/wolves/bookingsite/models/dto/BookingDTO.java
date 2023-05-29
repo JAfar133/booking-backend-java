@@ -26,6 +26,7 @@ public class BookingDTO {
     private PersonDTO customer;
     private String comment;
     private boolean confirmed;
+    private boolean rejected;
 
 
 
@@ -105,5 +106,13 @@ public class BookingDTO {
 
     public void setBookedAt(Date bookedAt) {
         this.bookedAt = bookedAt;
+    }
+
+    public boolean isRejected() {
+        return rejected;
+    }
+
+    public void setRejected(boolean rejected) {
+        this.rejected = rejected;
     }
 }

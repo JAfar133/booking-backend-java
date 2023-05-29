@@ -44,6 +44,7 @@ public class Booking {
     private String comment;
 
     private boolean confirmed;
+    private boolean rejected;
 
 
 
@@ -75,6 +76,14 @@ public class Booking {
 
     public void setConfirmed(boolean confirmed) {
         this.confirmed = confirmed;
+    }
+
+    public boolean isRejected() {
+        return rejected;
+    }
+
+    public void setRejected(boolean rejected) {
+        this.rejected = rejected;
     }
 
     public LocalDate getDate() {

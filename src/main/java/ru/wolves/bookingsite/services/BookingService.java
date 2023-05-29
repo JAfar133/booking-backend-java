@@ -17,6 +17,8 @@ public interface BookingService {
     Booking updateBooking(Long id, Booking booking) throws BookingNotFoundException;
     List<Booking> findAllUnConfirmedBooking();
     List<Booking> findAllConfirmedBooking();
+    List<Booking> findAllRejectedBooking();
+    List<Booking> findAllUnRejectedBooking();
     List<Booking> findAllBookingWithPlaceAndDate(RoomHall roomHall, LocalDate date);
 
 }

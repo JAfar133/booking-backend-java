@@ -179,6 +179,16 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public List<Booking> findAllRejectedBooking() {
+        return bookingRepo.findAllByRejectedIsTrue();
+    }
+
+    @Override
+    public List<Booking> findAllUnRejectedBooking() {
+        return bookingRepo.findAllByRejectedIsFalse();
+    }
+
+    @Override
     public List<Booking> findAllBookingWithPlaceAndDate(RoomHall roomHall, LocalDate date) {
         return bookingRepo.findAllByPlaceAndDate(Sort.by("timeStart"), roomHall, date);
     }

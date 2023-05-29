@@ -3,6 +3,7 @@ package ru.wolves.bookingsite.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -80,8 +81,9 @@ public class SecurityConfig {
                 .httpBasic()
                     .disable()
                 .authorizeHttpRequests()
-                    .requestMatchers("/admin/**").hasAuthority(PersonRole.ADMIN.toString())
-                    .requestMatchers("/booking/save", "/sms/verifyCode","/booking/delete-all")
+                    .requestMatchers(HttpMethod.GET,"/roomHall/**").permitAll()
+                    .requestMatchers("/admin/**","/roomHall/**").hasAuthority(PersonRole.ADMIN.toString())
+                    .requestMatchers("/booking/save", "/booking/delete-all","/sms/verifyCode", "person/**")
                         .authenticated()
                     .anyRequest().permitAll()
                     .and()

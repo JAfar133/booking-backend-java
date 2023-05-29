@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "roomhall")
@@ -102,5 +103,18 @@ public class RoomHall {
     @Override
     public String toString() {
         return name + " - " + address;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RoomHall roomHall = (RoomHall) o;
+        return Objects.equals(id, roomHall.id) && Objects.equals(name, roomHall.name) && Objects.equals(address, roomHall.address) && Objects.equals(lon, roomHall.lon) && Objects.equals(lat, roomHall.lat);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, address, lon, lat);
     }
 }

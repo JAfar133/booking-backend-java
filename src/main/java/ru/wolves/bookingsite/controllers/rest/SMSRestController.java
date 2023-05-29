@@ -7,27 +7,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import ru.wolves.bookingsite.exceptions.FieldIsEmptyException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.NotValidPhoneNumberException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonAlreadyExistException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonNotFoundException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.SmsCodeIsNotCorrectException;
 import ru.wolves.bookingsite.models.Person;
 import ru.wolves.bookingsite.models.SmsCode;
-import ru.wolves.bookingsite.models.dto.AuthenticationResponse;
 import ru.wolves.bookingsite.models.dto.PersonDTO;
 import ru.wolves.bookingsite.security.PersonDetails;
 import ru.wolves.bookingsite.services.impl.PersonServiceImpl;
 import ru.wolves.bookingsite.services.impl.SmsServiceImpl;
 
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-
 @RestController
 @RequestMapping("/sms")
 public class SMSRestController {
 
-    public final static String SESSION_KEY_SMS_CODE = "SESSION_KEY_SMS_CODE";
     private final PersonServiceImpl personService;
     private final SmsServiceImpl smsService;
     private final ModelMapper modelMapper;
@@ -42,8 +36,18 @@ public class SMSRestController {
     @PostMapping("/sendSms")
     public ResponseEntity<?> sendSms(@RequestParam("phoneNumber") String phoneNumber,
                                      @RequestParam(required = false, defaultValue = "false") Boolean changePhoneNumber) throws PersonNotFoundException {
+        SmsCode smsCode = null;
         if(!changePhoneNumber) personService.findPersonByPhone(phoneNumber);
-        SmsCode smsCode = smsService.sendSms(phoneNumber);
+        else {
+            try {
+                personService.findPersonByPhone(phoneNumber);
+                return ResponseEntity.badRequest().body("Пользователь с таким номером телефона уже зарегестрирован");
+            }catch (PersonNotFoundException e){
+                smsCode = smsService.sendSms(phoneNumber);
+                return ResponseEntity.ok().body(smsCode);
+            }
+        }
+        smsCode = smsService.sendSms(phoneNumber);
         return ResponseEntity.ok().body(smsCode);
     }
 

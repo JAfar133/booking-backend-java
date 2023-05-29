@@ -37,13 +37,6 @@ public class PersonRestController {
         this.modelMapper = modelMapper;
         this.personValidator = personValidator;
     }
-
-    @GetMapping
-    public ResponseEntity<?> getAll(){
-        List<Person> persons = personService.findAll();
-        List<PersonDTO> personDTOS = getPersonDTOs(persons);
-        return ResponseEntity.ok(personDTOS);
-    }
     @GetMapping("/get-bookings/{id}")
     public ResponseEntity<?> getAllBookingsByPersonId(@PathVariable Long id) throws PersonNotFoundException {
         Person person = personService.findPerson(id);
@@ -56,20 +49,14 @@ public class PersonRestController {
         }
         return ResponseEntity.ok(bookingDTOs);
     }
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getOne(@PathVariable Long id) throws PersonNotFoundException {
-        Person person = personService.findPerson(id);
-        PersonDTO personDTO = convertToPersonDTO(person);
-        return ResponseEntity.ok(convertToPersonDTO(person));
-    }
     @PostMapping
-    public ResponseEntity<?> updatePerson(@RequestBody PersonDTO personDTO) throws NotValidPhoneNumberException, FieldIsEmptyException, PersonNotFoundException {
+    public ResponseEntity<?> updatePerson(@RequestBody PersonDTO personDTO) throws PersonNotFoundException, NotValidPhoneNumberException, FieldIsEmptyException {
         Person person = convertToPerson(personDTO);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         PersonDetails personDetails = (PersonDetails) authentication.getPrincipal();
         Person person1 = personDetails.getPerson();
-
-        personService.updatePerson(person1.getId(),person);
+        personValidator.validate(person);
+        personService.updatePerson(person1.getId(), person);
         return ResponseEntity.ok(convertToPersonDTO(person));
     }
     @PostMapping("/update-email")
@@ -95,17 +82,6 @@ public class PersonRestController {
         return ResponseEntity.ok(convertToPersonDTO(personDetails.getPerson()));
     }
 
-    @GetMapping("/session")
-    public Map<String, Object> getSession(HttpSession session){
-        Map<String, Object> result = new HashMap<>();
-        result.put("sessionId", session.getId());
-        result.put("sessionCreationTime", session.getCreationTime());
-        result.put("sessionLastAccessedTime", session.getLastAccessedTime());
-        result.put("sessionMaxInactiveInterval", session.getMaxInactiveInterval());
-        result.put("person", session.getAttribute("person"));
-        return result;
-    }
-
     @ExceptionHandler({
             PersonNotFoundException.class, FieldIsEmptyException.class,
             NotValidPhoneNumberException.class, PersonAlreadyExistException.class
@@ -125,12 +101,6 @@ public class PersonRestController {
         return modelMapper.map(booking,BookingDTO.class);
     }
 
-    private List<PersonDTO> getPersonDTOs(List<Person> personList){
-        List<PersonDTO> personDTOS = new ArrayList<>();
-        for (Person person: personList) {
-            personDTOS.add(convertToPersonDTO(person));
-        }
-        return personDTOS;
-    }
+
 
 }

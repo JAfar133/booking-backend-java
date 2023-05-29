@@ -126,7 +126,7 @@ public class PersonServiceImpl implements PersonService {
     }
 
     @Transactional
-    public Person verifyPhoneNumber(Person person, String phoneNumber) throws NotValidPhoneNumberException {
+    public Person verifyPhoneNumber(Person person, String phoneNumber) throws NotValidPhoneNumberException{
         personValidator.validatePhoneNumber(phoneNumber);
         person.setPhoneNumber(phoneNumber);
         person.setPhoneNumberConfirmed(true);

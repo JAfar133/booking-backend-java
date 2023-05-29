@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import ru.wolves.bookingsite.models.enums.PersonRole;
 import ru.wolves.bookingsite.security.socialOauth2.AuthProvider;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -85,6 +86,7 @@ public class Person {
     }
 
     public AuthProvider getProvider() {
+
         return provider;
     }
 

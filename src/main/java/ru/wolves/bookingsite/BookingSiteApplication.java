@@ -2,6 +2,7 @@ package ru.wolves.bookingsite;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -18,6 +19,8 @@ import java.util.Collections;
 @SpringBootApplication
 @EnableCaching
 public class BookingSiteApplication {
+    @Value("${CLIENT_URL}")
+    private String CLIENT_URL;
     public static void main(String[] args) {
         SpringApplication.run(BookingSiteApplication.class, args);
 
@@ -32,18 +35,17 @@ public class BookingSiteApplication {
     }
 
     @Bean
-    public FilterRegistrationBean simpleCorsFilter() {
+    public FilterRegistrationBean<CorsFilter> simpleCorsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        // *** URL below needs to match the Vue client URL and port ***
-        config.setAllowedOrigins(Arrays.asList("http://195.133.49.102:8081","http://localhost:8081"));
+        config.setAllowedOrigins(Collections.singletonList(CLIENT_URL));
         config.setAllowedMethods(Arrays.asList("PATCH","GET","POST","DELETE","PUT"));
         config.setAllowedHeaders(Collections.singletonList("*"));
         source.registerCorsConfiguration("/**", config);
-        FilterRegistrationBean bean = new FilterRegistrationBean<>(new CorsFilter(source));
-        bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
-        return bean;
+        FilterRegistrationBean<CorsFilter> filterBean = new FilterRegistrationBean<>(new CorsFilter(source));
+        filterBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return filterBean;
     }
 
 }

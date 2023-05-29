@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.wolves.bookingsite.exceptions.PersonExceptions.PermissionDeniedException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonNotFoundException;
 import ru.wolves.bookingsite.exceptions.bookingExceptions.BookingNotFoundException;
 import ru.wolves.bookingsite.models.Booking;
@@ -17,14 +18,12 @@ import ru.wolves.bookingsite.models.RoomHall;
 import ru.wolves.bookingsite.models.dto.BookingDTO;
 import ru.wolves.bookingsite.repositories.BookingRepo;
 import ru.wolves.bookingsite.repositories.PersonRepo;
+import ru.wolves.bookingsite.security.PersonDetails;
 import ru.wolves.bookingsite.services.BookingService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -91,10 +90,14 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Transactional
-    public void deleteBookings(List<BookingDTO> bookingDTOS){
+    public void deleteBookings(List<BookingDTO> bookingDTOS, PersonDetails personDetails) throws PermissionDeniedException {
         List<Booking> bookings = new ArrayList<>();
+        Person person = personRepo.findById(personDetails.getPerson().getId()).orElseThrow();
         bookingDTOS.forEach(b->bookings.add(convertToBooking(b)));
-        bookingRepo.deleteAll(bookings);
+        if(new HashSet<>(person.getBookingList()).containsAll(bookings)) {
+            bookingRepo.deleteAll(bookings);
+        }
+        else throw new PermissionDeniedException("You have no permission");
     }
 
     private String getLastNameInitials(Person person){

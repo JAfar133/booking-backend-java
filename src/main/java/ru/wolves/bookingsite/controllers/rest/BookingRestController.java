@@ -2,14 +2,15 @@ package ru.wolves.bookingsite.controllers.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jakarta.servlet.http.HttpSession;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ru.wolves.bookingsite.exceptions.FieldIsEmptyException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.NotValidPhoneNumberException;
+import ru.wolves.bookingsite.exceptions.PersonExceptions.PermissionDeniedException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonNotFoundException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.SmsCodeIsNotCorrectException;
 import ru.wolves.bookingsite.exceptions.PlaceIsNotFoundException;
@@ -20,8 +21,8 @@ import ru.wolves.bookingsite.models.Booking;
 import ru.wolves.bookingsite.models.Person;
 import ru.wolves.bookingsite.models.dto.BookingDTO;
 import ru.wolves.bookingsite.models.dto.PersonDTO;
+import ru.wolves.bookingsite.security.PersonDetails;
 import ru.wolves.bookingsite.services.impl.BookingServiceImpl;
-import ru.wolves.bookingsite.services.impl.RoomHallServiceImpl;
 import ru.wolves.bookingsite.util.BookingValidator;
 import ru.wolves.bookingsite.util.PersonValidator;
 
@@ -30,33 +31,30 @@ import java.util.List;
 
 
 @RestController
-@CrossOrigin(origins = "http://195.133.49.102:8081")
 @RequestMapping("/booking")
 public class BookingRestController {
 
     private final BookingServiceImpl bookingService;
     private final BookingValidator bookingValidator;
     private final PersonValidator personValidator;
-    private final RoomHallServiceImpl roomHallService;
-    private final ObjectMapper objectMapper;
+
     private final ModelMapper modelMapper;
+    private final ObjectMapper objectMapper;
 
     @Autowired
     public BookingRestController(BookingServiceImpl bookingService, BookingValidator bookingValidator,
-                                 PersonValidator personValidator, RoomHallServiceImpl roomHallService,
-                                 ObjectMapper objectMapper, ModelMapper modelMapper) {
+                                 PersonValidator personValidator, ModelMapper modelMapper, ObjectMapper objectMapper) {
         this.bookingService = bookingService;
         this.bookingValidator = bookingValidator;
         this.personValidator = personValidator;
-        this.roomHallService = roomHallService;
-        this.objectMapper = objectMapper;
         this.modelMapper = modelMapper;
+        this.objectMapper = objectMapper;
         objectMapper.registerModule(new JavaTimeModule());
     }
 
     @PostMapping("/valid-booking")
     public ResponseEntity<?> validBookingAndAddToSession(
-            @RequestBody BookingDTO bookingDTO) throws PlaceIsNotFoundException, FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException {
+            @RequestBody BookingDTO bookingDTO) throws FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException {
         Booking booking = convertToBooking(bookingDTO);
 
         bookingValidator.validate(booking);
@@ -101,31 +99,19 @@ public class BookingRestController {
         }
         return ResponseEntity.ok(allBooking);
     }
-    @PatchMapping("/{id}")
-    public ResponseEntity<?> updateBooking(@PathVariable Long id, @RequestBody BookingDTO bookingDTO) throws BookingNotFoundException, FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException {
-        Booking booking = convertToBooking(bookingDTO);
-        bookingService.updateBooking(id, booking);
-
-        return ResponseEntity.ok(booking);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable("id") Long id) throws BookingNotFoundException {
-        bookingService.deleteBooking(id);
-        return ResponseEntity.ok("Booking was deleted successfully");
-    }
 
     @PostMapping("/delete-all")
-    public ResponseEntity<?> deleteBookings(@RequestBody List<BookingDTO> bookingDTOS){
-        bookingService.deleteBookings(bookingDTOS);
+    public ResponseEntity<?> deleteBookings(@RequestBody List<BookingDTO> bookingDTOS) throws PermissionDeniedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        PersonDetails personDetails = (PersonDetails) authentication.getPrincipal();
+        bookingService.deleteBookings(bookingDTOS, personDetails);
         return ResponseEntity.ok("bookings was deleted");
     }
-
     @ExceptionHandler({
             PlaceIsNotFoundException.class, FieldIsEmptyException.class,
             NotValidPhoneNumberException.class, TimeEndIsBeforeOrEqualsTimeStartException.class,
             BookingNotFoundException.class, PlaceIsNotFreeException.class,
-            Exception.class, SmsCodeIsNotCorrectException.class
+            Exception.class, SmsCodeIsNotCorrectException.class, PermissionDeniedException.class
     })
     private ResponseEntity<?> handle(Exception e){
         return ResponseEntity.badRequest().body(e.getMessage());

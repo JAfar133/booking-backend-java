@@ -22,8 +22,8 @@ import java.io.IOException;
 @RequestMapping("/auth")
 public class AuthController {
 
-    @Value("${BASE_URL}")
-    private String BASE_URL;
+    @Value("${CLIENT_URL}")
+    private String CLIENT_URL;
     private final PersonServiceImpl personService;
 
     @Autowired
@@ -34,7 +34,7 @@ public class AuthController {
     @GetMapping("/redirect")
     public void redirect(@RequestParam("access_token") String accessToken,
                          @RequestParam("refresh_token") String refreshToken, HttpServletResponse response) throws IOException {
-        StringBuilder stringBuilder = new StringBuilder(BASE_URL);
+        StringBuilder stringBuilder = new StringBuilder(CLIENT_URL);
         stringBuilder
                 .append("/oauth?access_token=")
                 .append(accessToken)

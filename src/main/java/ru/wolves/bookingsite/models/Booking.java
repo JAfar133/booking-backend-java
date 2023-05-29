@@ -137,12 +137,12 @@ public class Booking {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Booking booking = (Booking) o;
-        return id == booking.id && Objects.equals(date, booking.date) && Objects.equals(timeStart, booking.timeStart) && Objects.equals(timeEnd, booking.timeEnd) && Objects.equals(bookedAt, booking.bookedAt) && Objects.equals(customer, booking.customer) && Objects.equals(place, booking.place);
+        return id.equals(booking.id) && Objects.equals(date, booking.date) && Objects.equals(timeStart, booking.timeStart) && Objects.equals(timeEnd, booking.timeEnd) && Objects.equals(bookedAt, booking.bookedAt) && Objects.equals(place, booking.place);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, date, timeStart, timeEnd, bookedAt, customer, place);
+        return Objects.hash(id, date, timeStart, timeEnd, bookedAt, place);
     }
 
     @Override

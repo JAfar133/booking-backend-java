@@ -48,12 +48,12 @@ public class AdminRestController {
         bookingService.updateBooking(id, booking);
         return ResponseEntity.ok(convertToBookingDTO(booking));
     }
-    @PatchMapping("/{id}")
+    @PostMapping("/{id}")
     public ResponseEntity<?> updateBooking(@PathVariable Long id, @RequestBody BookingDTO bookingDTO) throws BookingNotFoundException, FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException {
         Booking booking = convertToBooking(bookingDTO);
         bookingService.updateBooking(id, booking);
 
-        return ResponseEntity.ok(booking);
+        return ResponseEntity.ok(convertToBookingDTO(booking));
     }
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable("id") Long id) throws BookingNotFoundException {

@@ -1,5 +1,6 @@
 # Booking
 booking project
+**DEMO:** *http://195.133.49.102:8081/*
 
 ## Начало работы
 #### Должна быть установлена Java 17, IntelliJ Idea Ultimate (желательно), Maven и PostgreSQL

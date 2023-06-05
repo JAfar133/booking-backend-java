@@ -14,6 +14,7 @@ import ru.wolves.bookingsite.models.Booking;
 import ru.wolves.bookingsite.models.Person;
 import ru.wolves.bookingsite.models.dto.BookingDTO;
 import ru.wolves.bookingsite.models.dto.PersonDTO;
+import ru.wolves.bookingsite.models.enums.PersonRole;
 import ru.wolves.bookingsite.services.impl.BookingServiceImpl;
 import ru.wolves.bookingsite.services.impl.PersonServiceImpl;
 import ru.wolves.bookingsite.util.BookingValidator;
@@ -31,7 +32,8 @@ public class AdminRestController {
     private final BookingValidator bookingValidator;
 
     @Autowired
-    public AdminRestController(BookingServiceImpl bookingService, PersonServiceImpl personService, ModelMapper modelMapper, BookingValidator bookingValidator) {
+    public AdminRestController(BookingServiceImpl bookingService, PersonServiceImpl personService,
+                               ModelMapper modelMapper, BookingValidator bookingValidator) {
         this.bookingService = bookingService;
         this.personService = personService;
         this.modelMapper = modelMapper;
@@ -62,7 +64,9 @@ public class AdminRestController {
         return ResponseEntity.ok(convertToBookingDTO(booking));
     }
     @PostMapping("/booking-update/{id}")
-    public ResponseEntity<?> updateBooking(@PathVariable("id") Long id, @RequestBody BookingDTO bookingDTO) throws BookingNotFoundException, FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException {
+    public ResponseEntity<?> updateBooking(@PathVariable("id") Long id,
+                                           @RequestBody BookingDTO bookingDTO)
+            throws BookingNotFoundException, FieldIsEmptyException, TimeEndIsBeforeOrEqualsTimeStartException {
         Booking booking = convertToBooking(bookingDTO);
         bookingValidator.validate(booking);
         bookingService.updateBooking(id, booking);
@@ -86,11 +90,23 @@ public class AdminRestController {
         List<PersonDTO> personDTOS = getPersonDTOs(persons);
         return ResponseEntity.ok(personDTOS);
     }
+    @DeleteMapping("/person/{id}")
+    public ResponseEntity<?> deletePerson(@PathVariable("id") Long id) throws PersonNotFoundException {
+        personService.deletePerson(id);
+        return ResponseEntity.ok("person was deleted successfully");
+    }
+    @PostMapping("/make-admin/{id}")
+    public ResponseEntity<?> makeAdmin(@PathVariable("id") Long id) throws PersonNotFoundException {
+        Person person = personService.findPerson(id);
+        person.setRole(PersonRole.ADMIN);
+        person = personService.updatePerson(id, person);
+        return ResponseEntity.ok(convertToPersonDTO(person));
+    }
 
     @ExceptionHandler({
             PlaceIsNotFoundException.class, PlaceIsNotFreeException.class,
             FieldIsEmptyException.class, TimeEndIsBeforeOrEqualsTimeStartException.class,
-            BookingNotFoundException.class, PlaceIsNotFreeException.class
+            BookingNotFoundException.class, PlaceIsNotFreeException.class, PersonNotFoundException.class
     })
     private ResponseEntity<?> handle(Exception e){
         return ResponseEntity.badRequest().body(e.getMessage());

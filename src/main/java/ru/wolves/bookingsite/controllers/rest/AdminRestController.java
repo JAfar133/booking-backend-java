@@ -3,10 +3,13 @@ package ru.wolves.bookingsite.controllers.rest;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ru.wolves.bookingsite.exceptions.FieldIsEmptyException;
 import ru.wolves.bookingsite.exceptions.PersonExceptions.PersonNotFoundException;
 import ru.wolves.bookingsite.exceptions.PlaceIsNotFoundException;
+import ru.wolves.bookingsite.exceptions.WrongOperationException;
 import ru.wolves.bookingsite.exceptions.bookingExceptions.BookingNotFoundException;
 import ru.wolves.bookingsite.exceptions.bookingExceptions.PlaceIsNotFreeException;
 import ru.wolves.bookingsite.exceptions.bookingExceptions.TimeEndIsBeforeOrEqualsTimeStartException;
@@ -15,6 +18,7 @@ import ru.wolves.bookingsite.models.Person;
 import ru.wolves.bookingsite.models.dto.BookingDTO;
 import ru.wolves.bookingsite.models.dto.PersonDTO;
 import ru.wolves.bookingsite.models.enums.PersonRole;
+import ru.wolves.bookingsite.security.PersonDetails;
 import ru.wolves.bookingsite.services.impl.BookingServiceImpl;
 import ru.wolves.bookingsite.services.impl.PersonServiceImpl;
 import ru.wolves.bookingsite.util.BookingValidator;
@@ -102,11 +106,22 @@ public class AdminRestController {
         person = personService.updatePerson(id, person);
         return ResponseEntity.ok(convertToPersonDTO(person));
     }
+    @PostMapping("/make-user/{id}")
+    public ResponseEntity<?> makeUser(@PathVariable("id") Long id) throws PersonNotFoundException, WrongOperationException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        PersonDetails personDetails = (PersonDetails) authentication.getPrincipal();
+        if(personDetails.getPerson().getId().equals(id)) throw new WrongOperationException("you can't take away admin rights from yourself");
+        Person person = personService.findPerson(id);
+        person.setRole(PersonRole.USER);
+        person = personService.updatePerson(id, person);
+        return ResponseEntity.ok(convertToPersonDTO(person));
+    }
 
     @ExceptionHandler({
             PlaceIsNotFoundException.class, PlaceIsNotFreeException.class,
             FieldIsEmptyException.class, TimeEndIsBeforeOrEqualsTimeStartException.class,
-            BookingNotFoundException.class, PlaceIsNotFreeException.class, PersonNotFoundException.class
+            BookingNotFoundException.class, PlaceIsNotFreeException.class,
+            PersonNotFoundException.class, WrongOperationException.class
     })
     private ResponseEntity<?> handle(Exception e){
         return ResponseEntity.badRequest().body(e.getMessage());

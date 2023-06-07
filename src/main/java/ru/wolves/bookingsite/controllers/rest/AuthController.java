@@ -58,7 +58,7 @@ public class AuthController {
     }
     @PostMapping("/refresh-token")
     public void refreshToken(
-            HttpServletRequest request, HttpServletResponse response) throws PersonNotFoundException, IOException {
+            HttpServletRequest request, HttpServletResponse response) throws IOException {
         personService.refreshToken(request,response);
     }
 

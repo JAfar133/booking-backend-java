@@ -2,6 +2,7 @@ package ru.wolves.bookingsite.security.socialOauth2.socialUserInfo;
 
 import ru.wolves.bookingsite.exceptions.OAuth2AuthenticationProcessingException;
 import ru.wolves.bookingsite.security.socialOauth2.AuthProvider;
+import ru.wolves.bookingsite.security.socialOauth2.socialUserInfo.*;
 
 import java.util.Map;
 

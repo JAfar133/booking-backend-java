@@ -1,7 +1,6 @@
 package ru.wolves.bookingsite.services.impl;
 
 
-
 import org.apache.log4j.Logger;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +40,10 @@ public class BookingServiceImpl implements BookingService {
         this.modelMapper = modelMapper;
     }
 
-    public List<Booking> findAllByRoomHall(RoomHall roomHall){
+    public List<Booking> findAllByRoomHall(RoomHall roomHall) {
         return bookingRepo.findAllByPlace(roomHall);
     }
+
     @Override
     public List<Booking> findAllBooking() {
         return bookingRepo.findAll();
@@ -51,34 +51,32 @@ public class BookingServiceImpl implements BookingService {
 
     public Booking findBooking(Long id) throws BookingNotFoundException {
         Optional<Booking> booking = bookingRepo.findById(id);
-        if(!booking.isPresent())
+        if (!booking.isPresent())
             throw new BookingNotFoundException("Бронь с таким id не существует");
         return booking.get();
     }
 
     @Transactional
-    public void savePersonWithBooking(Booking booking) throws PersonNotFoundException {
+    public void savePersonWithBooking(Booking booking) {
         Optional<Person> person = personRepo.findById(booking.getCustomer().getId());
-        if(person.isPresent())
-        {
+        if (person.isPresent()) {
             Person clientPerson = booking.getCustomer();
             Person savedPerson = person.get();
-            if(clientPerson.getLastName()!=null) savedPerson.setLastName(clientPerson.getLastName());
-            if(clientPerson.getFirstName()!=null) savedPerson.setFirstName(clientPerson.getFirstName());
-            if(clientPerson.getMiddleName()!=null) savedPerson.setMiddleName(clientPerson.getMiddleName());
-            if(clientPerson.getPhoneNumber()!=null) savedPerson.setPhoneNumber(clientPerson.getPhoneNumber());
-            if(clientPerson.getPost()!=null) {
+            if (clientPerson.getLastName() != null) savedPerson.setLastName(clientPerson.getLastName());
+            if (clientPerson.getFirstName() != null) savedPerson.setFirstName(clientPerson.getFirstName());
+            if (clientPerson.getMiddleName() != null) savedPerson.setMiddleName(clientPerson.getMiddleName());
+            if (clientPerson.getPhoneNumber() != null) savedPerson.setPhoneNumber(clientPerson.getPhoneNumber());
+            if (clientPerson.getPost() != null) {
                 savedPerson.setPost(clientPerson.getPost());
                 if (clientPerson.getPost().equals("Студент")) {
                     savedPerson.setInstitute(clientPerson.getInstitute());
                     savedPerson.setCourse(clientPerson.getCourse());
-                }
-                else {
+                } else {
                     savedPerson.setStructure(clientPerson.getStructure());
                 }
             }
             booking.setBookedAt(new Date());
-            if(savedPerson.getBookingList()==null)
+            if (savedPerson.getBookingList() == null)
                 savedPerson.setBookingList(new ArrayList<>());
             savedPerson.getBookingList().add(booking);
             savedPerson.setLastNameAndInitials(getLastNameInitials(savedPerson));
@@ -93,14 +91,13 @@ public class BookingServiceImpl implements BookingService {
     public void deleteBookings(List<BookingDTO> bookingDTOS, PersonDetails personDetails) throws PermissionDeniedException {
         List<Booking> bookings = new ArrayList<>();
         Person person = personRepo.findById(personDetails.getPerson().getId()).orElseThrow();
-        bookingDTOS.forEach(b->bookings.add(convertToBooking(b)));
-        if(new HashSet<>(person.getBookingList()).containsAll(bookings)) {
+        bookingDTOS.forEach(b -> bookings.add(convertToBooking(b)));
+        if (new HashSet<>(person.getBookingList()).containsAll(bookings)) {
             bookingRepo.deleteAll(bookings);
-        }
-        else throw new PermissionDeniedException("You have no permission");
+        } else throw new PermissionDeniedException("You have no permission");
     }
 
-    private String getLastNameInitials(Person person){
+    private String getLastNameInitials(Person person) {
         var lastName = person.getLastName();
         var firstName = person.getFirstName();
         var middleName = person.getMiddleName();
@@ -111,44 +108,45 @@ public class BookingServiceImpl implements BookingService {
                 .append(middleName.charAt(0)).append(".");
         return fio.toString();
     }
+
     @Transactional
-    public void saveBooking(Booking booking){
+    public void saveBooking(Booking booking) {
         bookingRepo.save(booking);
-        log.info("Booking with id = "+booking.getId()+" was saved successfully");
+        log.info("Booking with id = " + booking.getId() + " was saved successfully");
     }
 
     @Override
     @Transactional
     public void deleteBooking(Booking booking) throws BookingNotFoundException {
         deleteBooking(booking.getId());
-        log.info("Booking with id = "+booking.getId()+" was deleted successfully");
+        log.info("Booking with id = " + booking.getId() + " was deleted successfully");
     }
 
     @Override
     @Transactional
     public void deleteBooking(Long id) throws BookingNotFoundException {
         Booking booking = findBooking(id);
-        if(booking==null){
-            log.info("Booking with id = "+id+" not found");
+        if (booking == null) {
+            log.info("Booking with id = " + id + " not found");
             throw new BookingNotFoundException("Бронь с таким id не существует");
         }
         bookingRepo.delete(booking);
-        log.info("Booking with id = "+id+" was deleted successfully");
+        log.info("Booking with id = " + id + " was deleted successfully");
     }
 
     @Override
-    @Scheduled(cron="0 0 3 * * ?") // Каждый день в 3:00
+    @Scheduled(cron = "0 0 3 * * ?") // Каждый день в 3:00
     @Transactional
     public void deleteOldBooking() {
-        log.info(LocalDateTime.now()+": Start scanning old booking...");
+        log.info(LocalDateTime.now() + ": Start scanning old booking...");
         LocalDate today = LocalDate.now();
-        findAllBooking().stream().forEach(x-> {
+        findAllBooking().stream().forEach(x -> {
             LocalDate date = x.getDate();
-            if(date.isBefore(today)) {
+            if (date.isBefore(today)) {
                 try {
                     deleteBooking(x);
                 } catch (BookingNotFoundException e) {
-                    log.info("Booking with id = "+x.getId()+" not found");
+                    log.info("Booking with id = " + x.getId() + " not found");
                 }
             }
         });
@@ -165,7 +163,7 @@ public class BookingServiceImpl implements BookingService {
         booking1.setTimeEnd(booking.getTimeEnd());
         booking1.setComment(booking.getComment());
         bookingRepo.save(booking1);
-        log.info("Booking with id = "+id+" was updated successfully");
+        log.info("Booking with id = " + id + " was updated successfully");
         return booking1;
     }
 
@@ -173,6 +171,7 @@ public class BookingServiceImpl implements BookingService {
     public List<Booking> findAllUnConfirmedBooking() {
         return bookingRepo.findAllByConfirmedIsFalse(Sort.by("bookedAt"));
     }
+
     @Override
     public List<Booking> findAllConfirmedBooking() {
         return bookingRepo.findAllByConfirmedIsTrue();
@@ -192,11 +191,13 @@ public class BookingServiceImpl implements BookingService {
     public List<Booking> findAllBookingWithPlaceAndDate(RoomHall roomHall, LocalDate date) {
         return bookingRepo.findAllByPlaceAndDate(Sort.by("timeStart"), roomHall, date);
     }
-    private Booking convertToBooking(BookingDTO bookingDTO){
-        return modelMapper.map(bookingDTO,Booking.class);
+
+    private Booking convertToBooking(BookingDTO bookingDTO) {
+        return modelMapper.map(bookingDTO, Booking.class);
     }
-    private BookingDTO convertToBookingDTO(Booking booking){
-        return modelMapper.map(booking,BookingDTO.class);
+
+    private BookingDTO convertToBookingDTO(Booking booking) {
+        return modelMapper.map(booking, BookingDTO.class);
     }
 
 }
